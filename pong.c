@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #define ARENA_OFFSET 50
-#define PADDLE_HEIGHT 150
+#define PADDLE_HEIGHT 175
 #define PADDLE_WIDTH 25
 #define PADDLE_OFFSETX 5
 
@@ -49,7 +49,7 @@ void InitGame(void) {
     player.rec.width = PADDLE_WIDTH;
     player.rec.x = arena.width- PADDLE_OFFSETX;
     player.rec.y = (arena.height - PADDLE_HEIGHT) / 2;
-    player.velocityY = 10;
+    player.velocityY = 15;
 
     enemy.color = BLACK;
     enemy.rec.height = PADDLE_HEIGHT;
@@ -62,8 +62,8 @@ void InitGame(void) {
     ball.centerY = screenHeight / 2;
     ball.color = WHITE;
     ball.radius = 20.0f;
-    ball.velocityX = 15;
-    ball.velocityY = 2;
+    ball.velocityX = 13;
+    ball.velocityY = 0;
 
     playerScore = 0;
     enemyScore = 0;
@@ -95,7 +95,7 @@ void Update(void) {
     //        enemy.rec.y -= 5.2;
     //}
     enemy.velocityY = (ball.centerY - enemy.rec.y);
-    enemy.rec.y += enemy.velocityY * 0.50;
+    enemy.rec.y += enemy.velocityY * 0.35;
     if (enemy.rec.y < ARENA_OFFSET) {
         enemy.rec.y = ARENA_OFFSET;
     }
