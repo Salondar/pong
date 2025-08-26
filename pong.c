@@ -62,7 +62,7 @@ void InitGame(void) {
     ball.centerY = screenHeight / 2;
     ball.color = WHITE;
     ball.radius = 20.0f;
-    ball.velocityX = 10;
+    ball.velocityX = 15;
     ball.velocityY = 2;
 
     playerScore = 0;
@@ -87,12 +87,20 @@ void Update(void) {
         enemy.rec.y += enemy.velocityY;
     }
 #else
-    if ((ball.centerY + ball.radius) > enemy.rec.y) {
-        if (enemy.rec.y + enemy.rec.height < arena.height + ARENA_OFFSET)
-            enemy.rec.y += 5.2;
+    //if ((ball.centerY + ball.radius) > enemy.rec.y) {
+    //    if (enemy.rec.y + enemy.rec.height < arena.height + ARENA_OFFSET)
+    //        enemy.rec.y += 5.2;
+    //}
+    //else if ((ball.centerY) < enemy.rec.y) {
+    //        enemy.rec.y -= 5.2;
+    //}
+    enemy.velocityY = (ball.centerY - enemy.rec.y);
+    enemy.rec.y += enemy.velocityY * 0.50;
+    if (enemy.rec.y < ARENA_OFFSET) {
+        enemy.rec.y = ARENA_OFFSET;
     }
-    else if ((ball.centerY) < enemy.rec.y) {
-            enemy.rec.y -= 5.2;
+    else if (enemy.rec.y + enemy.rec.height > arena.height + ARENA_OFFSET) {
+        enemy.rec.y = (arena.height + ARENA_OFFSET) - enemy.rec.height;
     }
 #endif
     // Collision detection ball with player paddle
