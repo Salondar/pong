@@ -1,6 +1,4 @@
 #include <raylib.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #define ARENA_OFFSET 50
 #define PADDLE_HEIGHT 175
@@ -8,9 +6,15 @@
 #define PADDLE_OFFSETX 5
 
 typedef struct {
+    int width;
+    int height;
+}Screen;
+
+typedef struct {
     Rectangle rec;
     float velocityY;
     Color color;
+    int score;
 }Paddle;
 
 typedef struct {
@@ -29,13 +33,21 @@ typedef struct {
     Color color;
 } Arena;
 
+typedef enum {
+    SINGLE_PLAYER,
+    MULTIPLAYER
+}GameMode;
+
+GameMode mode = SINGLE_PLAYER;
+
 Paddle player, enemy;
 Ball ball;
 Arena arena;
+Screen scree;
 Sound wallCollisionSound = {0};
 Sound brickCollisionSound = {0};
 
-static int screenWidth, screenHeight, playerScore, enemyScore;
+static int screenWidth, screenHeight;
 
 void InitGame(void) {
 
@@ -50,6 +62,7 @@ void InitGame(void) {
     player.rec.x = arena.width- PADDLE_OFFSETX;
     player.rec.y = (arena.height - PADDLE_HEIGHT) / 2;
     player.velocityY = 15;
+    player.score = 0;
 
     enemy.color = BLACK;
     enemy.rec.height = PADDLE_HEIGHT;
@@ -57,6 +70,7 @@ void InitGame(void) {
     enemy.rec.x = ARENA_OFFSET + PADDLE_WIDTH + PADDLE_OFFSETX;
     enemy.rec.y = (arena.height - PADDLE_HEIGHT) / 2;
     enemy.velocityY = 10;
+    enemy.score = 0;
 
     ball.centerX = screenWidth / 2;
     ball.centerY = screenHeight / 2;
@@ -64,45 +78,43 @@ void InitGame(void) {
     ball.radius = 20.0f;
     ball.velocityX = 13;
     ball.velocityY = 0;
+}
 
-    playerScore = 0;
-    enemyScore = 0;
+void UpdateScore() {
+    ball.centerX = screenWidth / 2;
+    ball.centerY = screenHeight / 2;
+    ball.velocityY = 0;
+    player.score++; 
 }
 
 void Update(void) {
 
+    // Player 1 mode
     if (IsKeyDown(KEY_UP) && (player.rec.y > ARENA_OFFSET)) {
         player.rec.y -= player.velocityY;
-    
     }
     if ((IsKeyDown(KEY_DOWN) && ((player.rec.y + player.rec.height)< arena.height + ARENA_OFFSET))) {
         player.rec.y += player.velocityY;
     }
-
-#if 0
-    if (IsKeyDown(KEY_W) && (enemy.rec.y > ARENA_OFFSET)) {
-        enemy.rec.y -= enemy.velocityY;
+    
+    if (mode == MULTIPLAYER) {
+        if (IsKeyDown(KEY_W) && (enemy.rec.y > ARENA_OFFSET)) {
+            enemy.rec.y -= enemy.velocityY;
+        }
+        if ((IsKeyDown(KEY_S) && ((enemy.rec.y + enemy.rec.height)< arena.height + ARENA_OFFSET))) {
+            enemy.rec.y += enemy.velocityY;
+        }
     }
-    if ((IsKeyDown(KEY_S) && ((enemy.rec.y + enemy.rec.height)< arena.height + ARENA_OFFSET))) {
-        enemy.rec.y += enemy.velocityY;
+    else if (mode == SINGLE_PLAYER) {
+        enemy.velocityY = (ball.centerY - enemy.rec.y);
+        enemy.rec.y += enemy.velocityY * 0.35;
+        if (enemy.rec.y < ARENA_OFFSET) {
+            enemy.rec.y = ARENA_OFFSET;
+        }
+        else if (enemy.rec.y + enemy.rec.height > arena.height + ARENA_OFFSET) {
+            enemy.rec.y = (arena.height + ARENA_OFFSET) - enemy.rec.height;
+        }
     }
-#else
-    //if ((ball.centerY + ball.radius) > enemy.rec.y) {
-    //    if (enemy.rec.y + enemy.rec.height < arena.height + ARENA_OFFSET)
-    //        enemy.rec.y += 5.2;
-    //}
-    //else if ((ball.centerY) < enemy.rec.y) {
-    //        enemy.rec.y -= 5.2;
-    //}
-    enemy.velocityY = (ball.centerY - enemy.rec.y);
-    enemy.rec.y += enemy.velocityY * 0.35;
-    if (enemy.rec.y < ARENA_OFFSET) {
-        enemy.rec.y = ARENA_OFFSET;
-    }
-    else if (enemy.rec.y + enemy.rec.height > arena.height + ARENA_OFFSET) {
-        enemy.rec.y = (arena.height + ARENA_OFFSET) - enemy.rec.height;
-    }
-#endif
     // Collision detection ball with player paddle
     if (((ball.centerX + ball.radius) > player.rec.x) && ((ball.centerX - ball.radius) < player.rec.x + player.rec.width)
         && ((ball.centerY + ball.radius) > player.rec.y) && ((ball.centerY - ball.radius) < player.rec.y + player.rec.height)) {
@@ -138,17 +150,11 @@ void Update(void) {
     ball.centerY += ball.velocityY;
 
     if (ball.centerX + ball.radius > arena.width + ARENA_OFFSET) {
-        ball.centerX = screenWidth / 2;
-        ball.centerY = screenHeight / 2;
-        ball.velocityY = 0;
-        enemyScore++;
+        UpdateScore();
     }
 
     if (ball.centerX - ball.radius < ARENA_OFFSET) {
-        ball.centerX = screenWidth / 2;
-        ball.centerY = screenHeight / 2;
-        ball.velocityY = 0;
-        playerScore++;
+        UpdateScore();
     }
 }
 
@@ -159,8 +165,8 @@ void DrawFrame(void) {
     DrawRectangleV(arena.start, (Vector2){arena.width, arena.height}, SKYBLUE);
     DrawRectangleRec(player.rec, player.color);
     DrawRectangleRec(enemy.rec, enemy.color);
-    DrawText(TextFormat("%d", playerScore), screenWidth / 2 + (2 * ARENA_OFFSET), 2 * ARENA_OFFSET, 100, WHITE);
-    DrawText(TextFormat("%d", enemyScore), screenWidth / 2 - (2 * ARENA_OFFSET), 2 * ARENA_OFFSET, 100, WHITE);
+    DrawText(TextFormat("%d", player.score), screenWidth / 2 + (2 * ARENA_OFFSET), 2 * ARENA_OFFSET, 100, WHITE);
+    DrawText(TextFormat("%d", enemy.score), screenWidth / 2 - (2 * ARENA_OFFSET), 2 * ARENA_OFFSET, 100, WHITE);
     DrawCircle(ball.centerX, ball.centerY, ball.radius, ball.color);
 
     EndDrawing();
@@ -181,18 +187,6 @@ int main(void) {
     brickCollisionSound = LoadSound("sound/block.mp3");
 
     while (!WindowShouldClose()) {
-        if (IsWindowResized()) {
-            screenWidth = GetScreenWidth();
-            screenHeight = GetScreenHeight();
-
-            arena.width = screenWidth - 2 * ARENA_OFFSET;
-            arena.height = screenHeight - 2 * ARENA_OFFSET;
-
-            player.rec.x = arena.width - PADDLE_OFFSETX;
-            player.rec.y = (arena.height - PADDLE_HEIGHT) / 2;
-            enemy.rec.x = ARENA_OFFSET + PADDLE_WIDTH + PADDLE_OFFSETX;
-            enemy.rec.y = (arena.height - PADDLE_HEIGHT) / 2;
-        }
         Update();
         DrawFrame();
     }
