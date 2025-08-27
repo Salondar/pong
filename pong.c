@@ -193,18 +193,6 @@ int main(void) {
     brickCollisionSound = LoadSound("sound/block.mp3");
 
     while (!WindowShouldClose()) {
-        //if (IsWindowResized()) {
-        //    screenWidth = GetScreenWidth();
-        //    screenHeight = GetScreenHeight();
-
-        //    arena.width = screenWidth - 2 * ARENA_OFFSET;
-        //    arena.height = screenHeight - 2 * ARENA_OFFSET;
-
-        //    player.rec.x = arena.width - PADDLE_OFFSETX;
-        //    player.rec.y = (arena.height - PADDLE_HEIGHT) / 2;
-        //    enemy.rec.x = ARENA_OFFSET + PADDLE_WIDTH + PADDLE_OFFSETX;
-        //    enemy.rec.y = (arena.height - PADDLE_HEIGHT) / 2;
-        //}
         Update(&screen, &arena, &player, &enemy, &ball);
         DrawFrame(screen, arena, player, enemy, ball);
     }
