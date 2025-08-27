@@ -182,8 +182,7 @@ int main(void) {
 
     screen.width = 1280;
     screen.height = 720;
-
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    
     InitWindow(screen.width, screen.height, "Pong");
     InitAudioDevice();
     SetTargetFPS(60);
