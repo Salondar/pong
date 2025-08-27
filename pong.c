@@ -1,5 +1,7 @@
 #include <raylib.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <stdio.h>
 
 #define ARENA_OFFSET 50
 #define PADDLE_HEIGHT 200
@@ -200,6 +202,7 @@ int main(void) {
     Ball ball;
     Arena arena;
     Screen screen;
+    bool tutorialOn = true;
 
     screen.width = 1700;
     screen.height = 900;
@@ -233,8 +236,20 @@ int main(void) {
         } else {
             Update(&screen, &arena, &player, &enemy, &ball);
             DrawFrame(screen, arena, player, enemy, ball);
-        }
-      
+            if (tutorialOn) {
+                BeginDrawing();
+                if (hot_button == 0) {
+                    DrawText("Up and Down arrow to move", screen.width / 2 + 100, (screen.height  - 100)/ 2, 30, WHITE);
+                }
+                else {
+                    DrawText("W/S to move", screen.width / 2 - 600, (screen.height  - 100)/ 2, 40, WHITE);
+                    DrawText("Up/Down arrow to move", screen.width / 2 + 100, (screen.height  - 100)/ 2, 40, WHITE); 
+                }
+                tutorialOn = false;
+                EndDrawing();
+                sleep(2);
+            }
+        }  
     }
     UnloadSound(wallCollisionSound);
     UnloadSound(brickCollisionSound);
