@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #define ARENA_OFFSET 50
-#define PADDLE_HEIGHT 175
+#define PADDLE_HEIGHT 200
 #define PADDLE_WIDTH 25
 #define PADDLE_OFFSETX 5
 
@@ -56,7 +56,7 @@ void InitGame(Screen *screen, Arena *arena, Paddle *player, Paddle *enemy, Ball 
     player->rec.width = PADDLE_WIDTH;
     player->rec.x = arena->width- PADDLE_OFFSETX;
     player->rec.y = (arena->height - PADDLE_HEIGHT) / 2;
-    player->velocityY = 15;
+    player->velocityY = 20;
     player->score = 0;
 
     enemy->color = BLACK;
@@ -71,7 +71,7 @@ void InitGame(Screen *screen, Arena *arena, Paddle *player, Paddle *enemy, Ball 
     ball->centerY = screen->height / 2;
     ball->color = WHITE;
     ball->radius = 20.0f;
-    ball->velocityX = 13;
+    ball->velocityX = 20;
     ball->velocityY = 0;
 }
 
@@ -102,7 +102,7 @@ void Update(Screen *screen, Arena *arena, Paddle *player, Paddle *enemy, Ball *b
     }
     else if (mode == SINGLE_PLAYER) {
         enemy->velocityY = (ball->centerY - enemy->rec.y);
-        enemy->rec.y += enemy->velocityY * 0.35;
+        enemy->rec.y += enemy->velocityY * 0.45;
         if (enemy->rec.y < ARENA_OFFSET) {
             enemy->rec.y = ARENA_OFFSET;
         }
@@ -180,8 +180,8 @@ int main(void) {
     Arena arena;
     Screen screen;
 
-    screen.width = 1280;
-    screen.height = 720;
+    screen.width = 1700;
+    screen.height = 900;
     
     InitWindow(screen.width, screen.height, "Pong");
     InitAudioDevice();
