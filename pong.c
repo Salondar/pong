@@ -111,21 +111,24 @@ void Update(Screen *screen, Arena *arena, Paddle *player, Paddle *enemy, Ball *b
         }
     }
     if (((ball->centerX + ball->radius) > player->rec.x) 
-    && ((ball->centerX - ball->radius) < (player->rec.x + player->rec.width))
-    && ((ball->centerY + ball->radius) > player->rec.y) 
-    && ((ball->centerY - ball->radius) < (player->rec.y + player->rec.height))) {
+        && ((ball->centerX - ball->radius) < (player->rec.x + player->rec.width))
+        && ((ball->centerY + ball->radius) > player->rec.y) 
+        && ((ball->centerY - ball->radius) < (player->rec.y + player->rec.height))) {
     
-    ball->centerX = player->rec.x - ball->radius;
-    ball->velocityX *= -1;
-    ball->velocityY = (ball->centerY - (player->rec.y + (player->rec.height / 2.0))) * 0.2;
+            ball->centerX = player->rec.x - ball->radius;
+            ball->velocityX *= -1;
+            ball->velocityY = (ball->centerY - (player->rec.y + (player->rec.height / 2.0))) * 0.2;
     
-    PlaySound(brickCollisionSound);
-}
+            PlaySound(brickCollisionSound);
+    }
 
 
     // Collision detection ball with enemy paddle
-     if (((ball->centerX + ball->radius) > enemy->rec.x) && ((ball->centerX - ball->radius) < enemy->rec.x + enemy->rec.width)
-        && ((ball->centerY + ball->radius) > enemy->rec.y) && ((ball->centerY - ball->radius) < enemy->rec.y + enemy->rec.height)) {
+     if (((ball->centerX + ball->radius) > enemy->rec.x) 
+        && ((ball->centerX - ball->radius) < enemy->rec.x + enemy->rec.width)
+        && ((ball->centerY + ball->radius) > enemy->rec.y) 
+        && ((ball->centerY - ball->radius) < enemy->rec.y + enemy->rec.height)) {
+
         ball->centerX = enemy->rec.x + ball->radius + PADDLE_WIDTH;
         ball->velocityX *= -1;
         ball->velocityY = (ball->centerY - (enemy->rec.y + (enemy->rec.height / 2.0))) * 0.2;
