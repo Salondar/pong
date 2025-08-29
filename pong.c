@@ -7,6 +7,7 @@
 #define PADDLE_HEIGHT 200
 #define PADDLE_WIDTH 25
 #define PADDLE_OFFSETX 5
+#define MAX_SCORE 10
 
 typedef struct {
     int width;
@@ -43,6 +44,7 @@ typedef enum {
 
 GameMode current_mode = GM_MENU;
 bool is_enemy_ai = true;
+bool gameOver =  false;
 static int hot_button = 0;
 
 Sound wallCollisionSound = {0};
@@ -83,84 +85,96 @@ void UpdateScore(Paddle *player, Ball *ball, Screen *screen) {
     ball->centerX = screen->width / 2;
     ball->centerY = screen->height / 2;
     ball->velocityY = 0;
-    player->score++; 
+    player->score++;
+    if (player->score == MAX_SCORE) {
+        gameOver = true;
+    }
 }
 
 void Update(Screen *screen, Arena *arena, Paddle *player, Paddle *enemy, Ball *ball) {
-     // Player 1
-    if (IsKeyDown(KEY_UP) && (player->rec.y > ARENA_OFFSET)) {
-        player->rec.y -= player->velocityY;
-    }
-    if ((IsKeyDown(KEY_DOWN) && ((player->rec.y + player->rec.height)< arena->height + ARENA_OFFSET))) {
-        player->rec.y += player->velocityY;
-    }
-    
-    if (!is_enemy_ai) {
-        // Player 2 Moves
-        if (IsKeyDown(KEY_W) && (enemy->rec.y > ARENA_OFFSET)) {
-            enemy->rec.y -= enemy->velocityY;
+     // Player 1  
+    if (!gameOver) {
+        if (IsKeyDown(KEY_UP) && (player->rec.y > ARENA_OFFSET)) {
+            player->rec.y -= player->velocityY;
+            }
+        if ((IsKeyDown(KEY_DOWN) && ((player->rec.y + player->rec.height)< arena->height + ARENA_OFFSET))) {
+            player->rec.y += player->velocityY;
         }
-        if ((IsKeyDown(KEY_S) && ((enemy->rec.y + enemy->rec.height)< arena->height + ARENA_OFFSET))) {
-            enemy->rec.y += enemy->velocityY;
+        
+        if (!is_enemy_ai) {
+            // Player 2 Moves
+            if (IsKeyDown(KEY_W) && (enemy->rec.y > ARENA_OFFSET)) {
+                enemy->rec.y -= enemy->velocityY;
+            }
+            if ((IsKeyDown(KEY_S) && ((enemy->rec.y + enemy->rec.height)< arena->height + ARENA_OFFSET))) {
+                enemy->rec.y += enemy->velocityY;
+            }
         }
-    }
-    else {
-        enemy->velocityY = (ball->centerY - enemy->rec.y);
-        enemy->rec.y += enemy->velocityY * 0.45;
-        if (enemy->rec.y < ARENA_OFFSET) {
-            enemy->rec.y = ARENA_OFFSET;
+        else {
+            enemy->velocityY = (ball->centerY - enemy->rec.y);
+            enemy->rec.y += enemy->velocityY * 0.4;
+            if (enemy->rec.y < ARENA_OFFSET) {
+                enemy->rec.y = ARENA_OFFSET;
+            }
+            else if (enemy->rec.y + enemy->rec.height > arena->height + ARENA_OFFSET) {
+                enemy->rec.y = (arena->height + ARENA_OFFSET) - enemy->rec.height;
+            }
         }
-        else if (enemy->rec.y + enemy->rec.height > arena->height + ARENA_OFFSET) {
-            enemy->rec.y = (arena->height + ARENA_OFFSET) - enemy->rec.height;
+        if (((ball->centerX + ball->radius) > player->rec.x) 
+            && ((ball->centerX - ball->radius) < (player->rec.x + player->rec.width))
+            && ((ball->centerY + ball->radius) > player->rec.y) 
+            && ((ball->centerY - ball->radius) < (player->rec.y + player->rec.height))) {
+        
+                ball->centerX = player->rec.x - ball->radius;
+                ball->velocityX *= -1;
+                ball->velocityY = (ball->centerY - (player->rec.y + (player->rec.height / 2.0))) * 0.2;
+        
+                PlaySound(brickCollisionSound);
         }
-    }
-    if (((ball->centerX + ball->radius) > player->rec.x) 
-        && ((ball->centerX - ball->radius) < (player->rec.x + player->rec.width))
-        && ((ball->centerY + ball->radius) > player->rec.y) 
-        && ((ball->centerY - ball->radius) < (player->rec.y + player->rec.height))) {
-    
-            ball->centerX = player->rec.x - ball->radius;
+        // Collision detection ball with enemy paddle
+        if (((ball->centerX + ball->radius) > enemy->rec.x) 
+            && ((ball->centerX - ball->radius) < enemy->rec.x + enemy->rec.width)
+            && ((ball->centerY + ball->radius) > enemy->rec.y) 
+            && ((ball->centerY - ball->radius) < enemy->rec.y + enemy->rec.height)) {
+
+            ball->centerX = enemy->rec.x + ball->radius + PADDLE_WIDTH;
             ball->velocityX *= -1;
-            ball->velocityY = (ball->centerY - (player->rec.y + (player->rec.height / 2.0))) * 0.2;
-    
+            ball->velocityY = (ball->centerY - (enemy->rec.y + (enemy->rec.height / 2.0))) * 0.2;
             PlaySound(brickCollisionSound);
-    }
+        }
 
+        // Collision detection ball with bottom wall
+        if (ball->centerY + ball->radius > arena->start.x + arena->height) {
+            ball->velocityY *= -1;
+            ball->centerY = arena->start.x + arena->height - ball->radius;
+            PlaySound(wallCollisionSound);
+        }
 
-    // Collision detection ball with enemy paddle
-     if (((ball->centerX + ball->radius) > enemy->rec.x) 
-        && ((ball->centerX - ball->radius) < enemy->rec.x + enemy->rec.width)
-        && ((ball->centerY + ball->radius) > enemy->rec.y) 
-        && ((ball->centerY - ball->radius) < enemy->rec.y + enemy->rec.height)) {
+        // Collision detection ball with top wall
+        if ((ball->centerY - ball->radius) < arena->start.y) {
+            ball->centerY = arena->start.y + ball->radius;
+            ball->velocityY *= -1;
+            PlaySound(wallCollisionSound);
+        }
+        ball->centerX += ball->velocityX;
+        ball->centerY += ball->velocityY;
 
-        ball->centerX = enemy->rec.x + ball->radius + PADDLE_WIDTH;
-        ball->velocityX *= -1;
-        ball->velocityY = (ball->centerY - (enemy->rec.y + (enemy->rec.height / 2.0))) * 0.2;
-        PlaySound(brickCollisionSound);
-    }
+        if (ball->centerX + ball->radius > arena->width + ARENA_OFFSET) {
+            UpdateScore(enemy, ball, screen);
+        }
 
-    // Collision detection ball with bottom wall
-    if (ball->centerY + ball->radius > arena->start.x + arena->height) {
-        ball->velocityY *= -1;
-        ball->centerY = arena->start.x + arena->height - ball->radius;
-        PlaySound(wallCollisionSound);
-    }
-
-    // Collision detection ball with top wall
-    if ((ball->centerY - ball->radius) < arena->start.y) {
-        ball->centerY = arena->start.y + ball->radius;
-        ball->velocityY *= -1;
-        PlaySound(wallCollisionSound);
-    }
-    ball->centerX += ball->velocityX;
-    ball->centerY += ball->velocityY;
-
-    if (ball->centerX + ball->radius > arena->width + ARENA_OFFSET) {
-        UpdateScore(enemy, ball, screen);
-    }
-
-    if (ball->centerX - ball->radius < ARENA_OFFSET) {
-        UpdateScore(player, ball, screen);
+        if (ball->centerX - ball->radius < ARENA_OFFSET) {
+            UpdateScore(player, ball, screen);
+        }   
+    } else {
+        if (IsKeyPressed(KEY_M)) {
+            current_mode = GM_MENU;
+            gameOver = false;
+        }
+        if (IsKeyPressed(KEY_R)) {
+            InitGame(screen, arena, player, enemy, ball);
+            gameOver = false;
+        }
     }
 }
 
@@ -194,6 +208,20 @@ void DrawFrame(Screen screen, Arena arena, Paddle player, Paddle enemy, Ball bal
     DrawText(TextFormat("%d", player.score), screen.width / 2 + (2 * ARENA_OFFSET), 2 * ARENA_OFFSET, 100, WHITE);
     DrawText(TextFormat("%d", enemy.score), screen.width / 2 - (2 * ARENA_OFFSET), 2 * ARENA_OFFSET, 100, WHITE);
     DrawCircle(ball.centerX, ball.centerY, ball.radius, ball.color);
+
+    if (gameOver) {
+        if (player.score == MAX_SCORE) {
+            DrawText("WIN!", screen.width / 2 + (4 * ARENA_OFFSET), 200, 45, DARKGRAY);
+            DrawText("Press R To Play Again", screen.width / 2 + (4 * ARENA_OFFSET), 250, 45, DARKGRAY);
+            DrawText("Press M To Return", screen.width / 2 + (4 * ARENA_OFFSET), 300, 45, DARKGRAY);
+
+        }
+        else {
+            DrawText("WIN!", screen.width / 2 - (12 * ARENA_OFFSET), 200, 45, DARKGRAY);
+            DrawText("Press R To Play Again", screen.width / 2 - (12 * ARENA_OFFSET), 250, 45, DARKGRAY);
+            DrawText("Press M To Return", screen.width / 2 - (12 * ARENA_OFFSET), 300, 45, DARKGRAY);
+        }
+    }
     EndDrawing();
 }
 
@@ -210,7 +238,6 @@ int main(void) {
     InitWindow(screen.width, screen.height, "Pong");
     InitAudioDevice();
     SetTargetFPS(60);
-    InitGame(&screen, &arena, &player, &enemy, &ball);
 
     wallCollisionSound = LoadSound("sound/wall.mp3");
     brickCollisionSound = LoadSound("sound/block.mp3");
@@ -231,6 +258,7 @@ int main(void) {
                 else {
                     is_enemy_ai = false;
                 }
+                InitGame(&screen, &arena, &player, &enemy, &ball);
             }
             DrawMenu(screen);
         } else {
