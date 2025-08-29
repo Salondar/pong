@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <time.h>
 
 #define ARENA_OFFSET 50
 #define PADDLE_HEIGHT 200
@@ -46,6 +47,7 @@ GameMode current_mode = GM_MENU;
 bool is_enemy_ai = true;
 bool gameOver =  false;
 static int hot_button = 0;
+static double frame_start;
 
 Sound wallCollisionSound = {0};
 Sound brickCollisionSound = {0};
@@ -178,48 +180,53 @@ void Update(Screen *screen, Arena *arena, Paddle *player, Paddle *enemy, Ball *b
     }
 }
 
-void DrawMenu(Screen screen) {
-    ClearBackground((Color){13, 18, 36, 100});
-    BeginDrawing();
-    DrawText("PONG", (screen.width - MeasureText("PONG", 110)) / 2, screen.height / 2 - 200, 110, WHITE);
-    if (hot_button == 0) {
-         DrawRectangleRounded((Rectangle){(screen.width - 630)/ 2.0, (screen.height - 80)/2.0, 630, 80}, 0.3, 10, (Color){94, 160, 255, 125});
-    } else {
-         DrawRectangleRounded((Rectangle){(screen.width - 630)/ 2.0, (screen.height - 80)/2.0, 630, 80}, 0.3, 10, (Color){40, 40, 40, 255});
-    }
-    DrawText("Single Player", (screen.width - MeasureText("Single Player", 70)) / 2, (screen.height - 70) / 2, 70, WHITE);
-    if (hot_button == 1) {
-        DrawRectangleRounded((Rectangle){(screen.width - 630)/ 2.0, (screen.height + 160)/2.0, 630, 80}, 0.3, 10, (Color){94, 160, 255, 125});
-    } else {
-        DrawRectangleRounded((Rectangle){(screen.width - 630)/ 2.0, (screen.height + 160)/2.0, 630, 80}, 0.3, 10, (Color){40, 40, 40, 255});
-    }
-    DrawText("Two Player", (screen.width - MeasureText("Two Player", 70)) / 2, (screen.height + 170) / 2, 70, WHITE);
-    DrawText("PRESS ENTER TO SELECT", 50, screen.height - 50, 30, WHITE);
-    EndDrawing();
-}
 
 void DrawFrame(Screen screen, Arena arena, Paddle player, Paddle enemy, Ball ball) {
     BeginDrawing();
-    ClearBackground(DARKGRAY);
-
-    DrawRectangleV(arena.start, (Vector2){arena.width, arena.height}, SKYBLUE);
-    DrawRectangleRec(player.rec, player.color);
-    DrawRectangleRec(enemy.rec, enemy.color);
-    DrawText(TextFormat("%d", player.score), screen.width / 2 + (2 * ARENA_OFFSET), 2 * ARENA_OFFSET, 100, WHITE);
-    DrawText(TextFormat("%d", enemy.score), screen.width / 2 - (2 * ARENA_OFFSET), 2 * ARENA_OFFSET, 100, WHITE);
-    DrawCircle(ball.centerX, ball.centerY, ball.radius, ball.color);
-
-    if (gameOver) {
-        if (player.score == MAX_SCORE) {
-            DrawText("WIN!", screen.width / 2 + (4 * ARENA_OFFSET), 200, 45, DARKGRAY);
-            DrawText("Press R To Play Again", screen.width / 2 + (4 * ARENA_OFFSET), 250, 45, DARKGRAY);
-            DrawText("Press M To Return", screen.width / 2 + (4 * ARENA_OFFSET), 300, 45, DARKGRAY);
-
+    if (current_mode == GM_MENU) {
+        ClearBackground((Color){13, 18, 36, 100});
+        DrawText("PONG", (screen.width - MeasureText("PONG", 110)) / 2, screen.height / 2 - 200, 110, WHITE);
+        if (hot_button == 0) {
+            DrawRectangleRounded((Rectangle){(screen.width - 630)/ 2.0, (screen.height - 80)/2.0, 630, 80}, 0.3, 10, (Color){94, 160, 255, 125});
+        } else {
+            DrawRectangleRounded((Rectangle){(screen.width - 630)/ 2.0, (screen.height - 80)/2.0, 630, 80}, 0.3, 10, (Color){40, 40, 40, 255});
         }
-        else {
-            DrawText("WIN!", screen.width / 2 - (12 * ARENA_OFFSET), 200, 45, DARKGRAY);
-            DrawText("Press R To Play Again", screen.width / 2 - (12 * ARENA_OFFSET), 250, 45, DARKGRAY);
-            DrawText("Press M To Return", screen.width / 2 - (12 * ARENA_OFFSET), 300, 45, DARKGRAY);
+        DrawText("Single Player", (screen.width - MeasureText("Single Player", 70)) / 2, (screen.height - 70) / 2, 70, WHITE);
+        if (hot_button == 1) {
+            DrawRectangleRounded((Rectangle){(screen.width - 630)/ 2.0, (screen.height + 160)/2.0, 630, 80}, 0.3, 10, (Color){94, 160, 255, 125});
+        } else {
+            DrawRectangleRounded((Rectangle){(screen.width - 630)/ 2.0, (screen.height + 160)/2.0, 630, 80}, 0.3, 10, (Color){40, 40, 40, 255});
+        }
+        DrawText("Two Player", (screen.width - MeasureText("Two Player", 70)) / 2, (screen.height + 170) / 2, 70, WHITE);
+        DrawText("PRESS ENTER TO SELECT", 50, screen.height - 50, 30, WHITE);
+    } else {
+        ClearBackground(DARKGRAY);
+        DrawRectangleV(arena.start, (Vector2){arena.width, arena.height}, SKYBLUE);
+        DrawRectangleRec(player.rec, player.color);
+        DrawRectangleRec(enemy.rec, enemy.color);
+        DrawText(TextFormat("%d", player.score), screen.width / 2 + (2 * ARENA_OFFSET), 2 * ARENA_OFFSET, 100, WHITE);
+        DrawText(TextFormat("%d", enemy.score), screen.width / 2 - (2 * ARENA_OFFSET), 2 * ARENA_OFFSET, 100, WHITE);
+        DrawCircle(ball.centerX, ball.centerY, ball.radius, ball.color);
+        if (GetTime() - frame_start < 3.0) {
+            if (hot_button == 0) {
+                DrawText("Up and Down arrow to move", screen.width / 2 + 100, (screen.height  - 100)/ 2, 30, WHITE);
+            }else {
+                DrawText("W/S to move", screen.width / 2 - 600, (screen.height  - 100)/ 2, 40, WHITE);
+                DrawText("Up/Down arrow to move", screen.width / 2 + 100, (screen.height  - 100)/ 2, 40, WHITE);
+            }
+        }
+        if (gameOver) {
+            if (player.score == MAX_SCORE) {
+                DrawText("WIN!", screen.width / 2 + (4 * ARENA_OFFSET), 200, 45, DARKGRAY);
+                DrawText("Press R To Play Again", screen.width / 2 + (4 * ARENA_OFFSET), 250, 45, DARKGRAY);
+                DrawText("Press M To Return", screen.width / 2 + (4 * ARENA_OFFSET), 300, 45, DARKGRAY);
+
+            }
+            else {
+                DrawText("WIN!", screen.width / 2 - (12 * ARENA_OFFSET), 200, 45, DARKGRAY);
+                DrawText("Press R To Play Again", screen.width / 2 - (12 * ARENA_OFFSET), 250, 45, DARKGRAY);
+                DrawText("Press M To Return", screen.width / 2 - (12 * ARENA_OFFSET), 300, 45, DARKGRAY);
+            }
         }
     }
     EndDrawing();
@@ -230,8 +237,6 @@ int main(void) {
     Ball ball;
     Arena arena;
     Screen screen;
-    bool tutorialOn = true;
-
     screen.width = 1700;
     screen.height = 900;
     
@@ -259,25 +264,12 @@ int main(void) {
                     is_enemy_ai = false;
                 }
                 InitGame(&screen, &arena, &player, &enemy, &ball);
+                frame_start = GetTime();
             }
-            DrawMenu(screen);
         } else {
             Update(&screen, &arena, &player, &enemy, &ball);
-            DrawFrame(screen, arena, player, enemy, ball);
-            if (tutorialOn) {
-                BeginDrawing();
-                if (hot_button == 0) {
-                    DrawText("Up and Down arrow to move", screen.width / 2 + 100, (screen.height  - 100)/ 2, 30, WHITE);
-                }
-                else {
-                    DrawText("W/S to move", screen.width / 2 - 600, (screen.height  - 100)/ 2, 40, WHITE);
-                    DrawText("Up/Down arrow to move", screen.width / 2 + 100, (screen.height  - 100)/ 2, 40, WHITE); 
-                }
-                tutorialOn = false;
-                EndDrawing();
-                sleep(2);
-            }
-        }  
+        }
+        DrawFrame(screen, arena, player, enemy, ball);
     }
     UnloadSound(wallCollisionSound);
     UnloadSound(brickCollisionSound);
