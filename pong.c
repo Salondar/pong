@@ -83,10 +83,10 @@ void InitGame(Screen *screen, Arena *arena, Paddle *player, Paddle *enemy, Ball 
     ball->velocityY = 0;
 }
 
-void UpdateScore(Paddle *player, Ball *ball, Screen *screen) {
+void UpdateScore(Paddle *player, Ball *ball, Screen *screen, Arena *arena) {
     ball->centerX = screen->width / 2;
-    ball->centerY = screen->height / 2;
-    ball->velocityY = 0;
+    ball->centerY = GetRandomValue(4 * ARENA_OFFSET, arena->height - (4 * ARENA_OFFSET));
+    ball->velocityY = GetRandomValue(-5, 5);
     player->score++;
     if (player->score == MAX_SCORE) {
         gameOver = true;
@@ -162,11 +162,11 @@ void Update(Screen *screen, Arena *arena, Paddle *player, Paddle *enemy, Ball *b
         ball->centerY += ball->velocityY;
 
         if (ball->centerX + ball->radius > arena->width + ARENA_OFFSET) {
-            UpdateScore(enemy, ball, screen);
+            UpdateScore(enemy, ball, screen, arena);
         }
 
         if (ball->centerX - ball->radius < ARENA_OFFSET) {
-            UpdateScore(player, ball, screen);
+            UpdateScore(player, ball, screen, arena);
         }   
     } else {
         if (IsKeyPressed(KEY_M)) {
@@ -243,6 +243,7 @@ int main(void) {
     InitWindow(screen.width, screen.height, "Pong");
     InitAudioDevice();
     SetTargetFPS(60);
+    SetRandomSeed(time(NULL));
 
     wallCollisionSound = LoadSound("sound/wall.mp3");
     brickCollisionSound = LoadSound("sound/block.mp3");
